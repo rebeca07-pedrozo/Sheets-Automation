@@ -10,3 +10,17 @@ function encontrarPolizasDuplicadas() {
     const datos = hojaOrigen.getDataRange().getValues();
     const encabezados = datos[0];
     const colPoliza = encabezados.indexOf("Número poliza");
+
+    
+    if (colPoliza !== -1) {
+      for (let i = 1; i < datos.length; i++) {
+        let valor = datos[i][colPoliza];
+        if (valor !== "" && valor != null) {
+          valor = valor.toString().trim();
+          if (valor !== "") {
+            polizas.push(valor);
+          }
+        }
+      }
+    }
+  });
