@@ -24,3 +24,11 @@ function encontrarPolizasDuplicadas() {
       }
     }
   });
+const conteo = {};
+  polizas.forEach(p => {
+    conteo[p] = (conteo[p] || 0) + 1;
+  });
+
+  const duplicadas = Object.entries(conteo).filter(([_, count]) => count > 1);
+
+  duplicadas.sort((a, b) => a[0].localeCompare(b[0]));
