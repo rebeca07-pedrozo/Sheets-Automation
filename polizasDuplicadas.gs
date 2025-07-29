@@ -32,3 +32,13 @@ const conteo = {};
   const duplicadas = Object.entries(conteo).filter(([_, count]) => count > 1);
 
   duplicadas.sort((a, b) => a[0].localeCompare(b[0]));
+  const hojaDuplicadas = hojaDestino.getSheetByName("Duplicadas") || hojaDestino.insertSheet("Duplicadas");
+  hojaDuplicadas.clear();
+  hojaDuplicadas.getRange(1, 1).setValue("Número de póliza duplicado");
+  hojaDuplicadas.getRange(1, 2).setValue("Cantidad de veces que aparece");
+
+  duplicadas.forEach((fila, i) => {
+    hojaDuplicadas.getRange(i + 2, 1).setValue(fila[0]);
+    hojaDuplicadas.getRange(i + 2, 2).setValue(fila[1]);
+  });
+}
