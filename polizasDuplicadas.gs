@@ -16,6 +16,7 @@ function encontrarPolizasDuplicadas() {
     if (colPoliza !== -1) {
       for (let i = 1; i < datos.length; i++) {
         let valor = datos[i][colPoliza];
+         let tipo = datos[i][colTipo]; 
         if (valor !== "" && valor != null) {
           valor = valor.toString().trim();
           if (valor !== "") {
