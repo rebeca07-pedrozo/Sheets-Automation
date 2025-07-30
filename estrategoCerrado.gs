@@ -71,3 +71,10 @@ function cruzarNumerosConSegundoDoc() {
       resultadoPrima.push([""]);
     }
   }
+  hoja1.getRange(2, colMap["CLAVE"], resultadoClave.length).setValues(resultadoClave);
+  hoja1.getRange(2, colMap["numero_poliza"], resultadoPoliza.length).setValues(resultadoPoliza);
+  hoja1.getRange(2, colMap["codigo_producto"], resultadoProducto.length).setValues(resultadoProducto);
+  hoja1.getRange(2, colMap["fecha_emision"], resultadoFecha.length).setValues(resultadoFecha);
+  hoja1.getRange(2, colMap["prima"], resultadoPrima.length).setValues(resultadoPrima);
+
+}
