@@ -30,3 +30,22 @@ function cruzarNumerosConSegundoDoc() {
       colMap[col] = idx + 1;
     }
   });
+  const lastRow1 = hoja1.getLastRow();
+  const numeros1 = hoja1.getRange(2, colNumero1, lastRow1 - 1).getValues();
+
+  const lastRow2 = hoja2.getLastRow();
+  const data2 = hoja2.getRange(2, 1, lastRow2 - 1, hoja2.getLastColumn()).getValues();
+
+  let mapaDocs = {};
+  data2.forEach(row => {
+    let key = String(row[8]).trim();
+    if (key) {
+      mapaDocs[key] = {
+        CLAVE: row[0],             
+        numero_poliza: row[1],     
+        codigo_producto: row[2],   
+        fecha_emision: row[3],     
+        prima: row[6],             
+      };
+    }
+  });
