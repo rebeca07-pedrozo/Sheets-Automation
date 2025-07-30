@@ -49,3 +49,25 @@ function cruzarNumerosConSegundoDoc() {
       };
     }
   });
+   let resultadoClave = [];
+  let resultadoPoliza = [];
+  let resultadoProducto = [];
+  let resultadoFecha = [];
+  let resultadoPrima = [];
+
+  for (let i = 0; i < numeros1.length; i++) {
+    let num = String(numeros1[i][0]).trim();
+    if (num && mapaDocs.hasOwnProperty(num)) {
+      resultadoClave.push([mapaDocs[num].CLAVE]);
+      resultadoPoliza.push([mapaDocs[num].numero_poliza]);
+      resultadoProducto.push([mapaDocs[num].codigo_producto]);
+      resultadoFecha.push([mapaDocs[num].fecha_emision]);
+      resultadoPrima.push([mapaDocs[num].prima]);
+    } else {
+      resultadoClave.push([""]);
+      resultadoPoliza.push([""]);
+      resultadoProducto.push([""]);
+      resultadoFecha.push([""]);
+      resultadoPrima.push([""]);
+    }
+  }
