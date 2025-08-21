@@ -1,45 +1,83 @@
-function actualizarEmisionesCompletas() {
+function EmisionesCreditoPractica_Todas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName("Emisiones 11 ago");
   const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) return; 
+  if (ultimaFila < 2) return;
 
-  hoja.getRange(2, 20, ultimaFila - 1, 7).clearContent();
+  hoja.getRange(2, 14, ultimaFila - 1, 12).clearContent();
 
-  const cedulaEmisiones = hoja.getRange(2, 9, ultimaFila - 1, 1).getValues(); 
-  const correoEmisiones = hoja.getRange(2, 11, ultimaFila - 1, 1).getValues(); 
+  const cedulas = hoja.getRange(2, 9, ultimaFila - 1, 1).getValues().map(r => String(r[0]).trim());
+  const correos = hoja.getRange(2, 11, ultimaFila - 1, 1).getValues().map(r => String(r[0]).trim());
 
-  const totalLeads = ss.getSheetByName("TOTAL LEADS");
-  const datosLeads = totalLeads.getRange(2, 1, totalLeads.getLastRow() - 1, 14).getValues(); 
+  const totalLeadsSheet = ss.getSheetByName("TOTAL LEADS");
+  const totalLeadsData = totalLeadsSheet.getRange(2, 1, totalLeadsSheet.getLastRow() - 1, 14).getValues();
+  const totalLeadsMap = new Map();
+  totalLeadsData.forEach(row => {
+    const cedula = String(row[4]).trim();
+    const email = String(row[2]).trim();
+    if (cedula) totalLeadsMap.set(cedula, row);
+    if (email) totalLeadsMap.set(email, row);
+  });
 
-  const bases = ss.getSheetByName("BASES");
-  const datosBases = bases.getRange(2, 1, bases.getLastRow() - 1, 8).getValues(); 
+  const leads322Sheet = ss.getSheetByName("Leads 322");
+  const leads322Data = leads322Sheet.getRange(2, 12, leads322Sheet.getLastRow() - 1, 1).getValues();
+  const leads322Map = new Map();
+  leads322Data.forEach(row => {
+    const cedula = String(row[0]).trim();
+    if (cedula) leads322Map.set(cedula, true);
+  });
 
-  const leads322 = ss.getSheetByName("Leads 322");
-  const datos322 = leads322.getRange(2, 12, leads322.getLastRow() - 1, 1).getValues(); 
+  const basesSheet = ss.getSheetByName("BASES");
+  // CAMBIO CLAVE: Ampliar el rango de lectura para incluir la columna J (10 columnas en total)
+  const basesData = basesSheet.getRange(2, 1, basesSheet.getLastRow() - 1, 10).getValues();
+  const basesMap = new Map();
+  basesData.forEach(row => {
+    const cedula = String(row[0]).trim();
+    const email = String(row[1]).trim();
+    if (cedula) basesMap.set(cedula, row);
+    if (email) basesMap.set(email, row);
+  });
 
-  for (let i = 0; i < cedulaEmisiones.length; i++) {
-    const cedula = cedulaEmisiones[i][0];
-    const correo = correoEmisiones[i][0];
-    let resultado = []; 
-
-    let encontradoLeads = datosLeads.find(row => row[4] == cedula || row[2] == correo);
-    if (encontradoLeads) {
-      resultado = [encontradoLeads[9], encontradoLeads[10], encontradoLeads[11], encontradoLeads[13]]; 
-    } else {
-      let encontrado322 = datos322.find(row => row[0] == cedula);
-      if (encontrado322) {
-        resultado = ["322"];
-      } else {
-        let encontradoBases = datosBases.find(row => row[0] == cedula || row[1] == correo);
-        if (encontradoBases) {
-          resultado = [encontradoBases[7]]; 
+  const resultados = cedulas.map((cedula, i) => {
+    const correo = correos[i];
+    
+    const countN = (cedula && totalLeadsMap.has(cedula)) ? 1 : 0;
+    
+    const countO = (correo && totalLeadsMap.has(correo)) ? 1 : 0;
+    
+    const countP = (cedula && leads322Map.has(cedula)) ? 1 : 0;
+    
+    const countQ = (cedula && basesMap.has(cedula)) ? 1 : 0;
+    
+    const countR = (correo && basesMap.has(correo)) ? 1 : 0;
+    
+    const suma = countN + countO + countP + countQ + countR;
+    
+    let fuente = "";
+    let additionalData = ["", "", "", "", ""]; 
+    
+    if (suma > 0) {
+      if (countN === 1 || countO === 1) {
+        fuente = "TOTAL LEADS";
+        const foundRow = totalLeadsMap.has(cedula) ? totalLeadsMap.get(cedula) : totalLeadsMap.get(correo);
+        if (foundRow) {
+          additionalData = foundRow.slice(9, 14);
+        }
+      } else if (countP === 1) {
+        fuente = "Leads 322";
+        // No se trae nada
+      } else if (countQ === 1 || countR === 1) {
+        fuente = "BASES";
+        const foundRow = basesMap.has(cedula) ? basesMap.get(cedula) : basesMap.get(correo);
+        if (foundRow) {
+          const basesDataSlice = foundRow.slice(7, 10);
+          additionalData = [...basesDataSlice, "", ""]; 
         }
       }
     }
 
-    if (resultado.length > 0) {
-      hoja.getRange(i + 2, 20, 1, resultado.length).setValues([resultado]);
-    }
-  }
+    return [countN, countO, countP, countQ, countR, suma, fuente, ...additionalData];
+  });
+
+  hoja.getRange(2, 14, resultados.length, 12).setValues(resultados);
 }
