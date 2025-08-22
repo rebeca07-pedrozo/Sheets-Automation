@@ -64,7 +64,6 @@ function EmisionesCreditoPractica_Todas() {
         }
       } else if (countP === 1) {
         fuente = "Leads 322";
-        // No se trae nada
       } else if (countQ === 1 || countR === 1) {
         fuente = "BASES";
         const foundRow = basesMap.has(cedula) ? basesMap.get(cedula) : basesMap.get(correo);
