@@ -28,7 +28,6 @@ function EmisionesCreditoPractica_Todas() {
   });
 
   const basesSheet = ss.getSheetByName("BASES");
-  // CAMBIO CLAVE: Ampliar el rango de lectura para incluir la columna J (10 columnas en total)
   const basesData = basesSheet.getRange(2, 1, basesSheet.getLastRow() - 1, 10).getValues();
   const basesMap = new Map();
   basesData.forEach(row => {
