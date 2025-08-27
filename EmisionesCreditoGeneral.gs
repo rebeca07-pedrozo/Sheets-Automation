@@ -39,3 +39,12 @@ function EmisionesCreditoPractica_Todas() {
     const cedula = row[11] ? String(row[11]).trim() : "";
     if (cedula) leads322Map.set(cedula, row);
   });
+const basesSheet = ss.getSheetByName("BASES");
+  const basesData = basesSheet.getRange(2, 1, basesSheet.getLastRow() - 1, 10).getValues();
+  const basesMap = new Map();
+  basesData.forEach(row => {
+    const cedula = row[0] ? String(row[0]).trim() : "";
+    const email = row[1] ? String(row[1]).trim().toLowerCase() : "";
+    if (cedula) basesMap.set(cedula, row);
+    if (email) basesMap.set(email, row);
+  });
