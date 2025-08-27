@@ -57,3 +57,66 @@ const basesSheet = ss.getSheetByName("BASES");
     const anio = d.getFullYear();
     return `${dia}/${mes}/${anio}`;
   }
+const resultados = [];
+  const valoresW = [];
+
+  cedulas.forEach((cedulaRaw, i) => {
+    const cedula = cedulaRaw;
+    const correo = correos[i];
+
+    const countN = (cedula && totalLeadsMap.has(cedula)) ? 1 : 0;
+    const countO = (correo && totalLeadsMap.has(correo)) ? 1 : 0;
+    const countP = (cedula && leads322Map.has(cedula)) ? 1 : 0;
+    const countQ = (cedula && basesMap.has(cedula)) ? 1 : 0;
+    const countR = (correo && basesMap.has(correo)) ? 1 : 0;
+
+    const suma = countN + countO + countP + countQ + countR;
+
+    let fuente = "";
+    let additionalData = Array(9).fill(""); 
+    let valorW = "";
+
+    if (suma > 0) {
+      if (countN === 1 || countO === 1) {
+        fuente = "TOTAL LEADS";
+        const foundRow = totalLeadsMap.has(cedula) ? totalLeadsMap.get(cedula) : totalLeadsMap.get(correo);
+        if (foundRow) {
+          
+          additionalData = foundRow.slice(9, 13).map(c => c != null ? String(c) : "").concat(Array(5).fill(""));
+          valorW = formatearFecha(foundRow[13]); 
+        }
+      } else if (countP === 1) {
+        fuente = "Leads 322";
+        const foundRow = leads322Map.get(cedula);
+        if (foundRow) {
+          additionalData = Array(9).fill("");
+          valorW = formatearFecha(foundRow[0]); 
+        }
+      } else if (countQ === 1 || countR === 1) {
+        fuente = "BASES";
+        const foundRow = basesMap.has(cedula) ? basesMap.get(cedula) : basesMap.get(correo);
+        if (foundRow) {
+          valorW = formatearFecha(foundRow[2]); 
+          additionalData = foundRow.slice(7, 10).concat(Array(6).fill(""));
+          additionalData[8] = foundRow[2] != null ? String(foundRow[2]) : ""; 
+        }
+      }
+    }
+
+    resultados.push([
+      suma,        
+      fuente,     
+      ...additionalData.slice(0, 8) 
+    ]);
+
+    valoresW.push([valorW]);
+  });
+
+  const rangoResultados = hoja.getRange(2, 19, resultados.length, encabezados.length);
+  rangoResultados.setValues(resultados);
+  rangoResultados.setHorizontalAlignment("right");
+
+  const rangoW = hoja.getRange(2, 23, valoresW.length, 1);
+  rangoW.setValues(valoresW);
+  rangoW.setHorizontalAlignment("right");
+}
