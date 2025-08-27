@@ -48,3 +48,12 @@ const basesSheet = ss.getSheetByName("BASES");
     if (cedula) basesMap.set(cedula, row);
     if (email) basesMap.set(email, row);
   });
+  function formatearFecha(fecha) {
+    if (!fecha) return "";
+    const d = new Date(fecha);
+    if (isNaN(d)) return "";
+    const dia = ("0" + d.getDate()).slice(-2);
+    const mes = ("0" + (d.getMonth() + 1)).slice(-2);
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
