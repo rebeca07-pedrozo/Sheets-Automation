@@ -1,6 +1,6 @@
 function EmisionesCreditoPractica_Todas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName("Emsiones 24");
+  const hoja = ss.getSheetByName("Emisiones 24");
   const ultimaFila = hoja.getLastRow();
   if (ultimaFila < 2) return;
 
@@ -9,15 +9,15 @@ function EmisionesCreditoPractica_Todas() {
     "venta", "fuente", "med", "campaña", "fecha lead",
     "prod", "cruce cami", "Prioridad", "Base", "Cruce Email"
   ];
-  hoja.getRange(1, 14, 1, encabezados.length)
+  hoja.getRange(1, 15, 1, encabezados.length)
       .setValues([encabezados])
       .setHorizontalAlignment("right");
-  hoja.getRange(2, 14, ultimaFila - 1, encabezados.length).clearContent();
+  hoja.getRange(2, 15, ultimaFila - 1, encabezados.length).clearContent();
 
-  const cedulas = hoja.getRange(2, 9, ultimaFila - 1, 1)
+  const cedulas = hoja.getRange(2, 10, ultimaFila - 1, 1)
                       .getValues()
                       .map(r => r[0] != null ? String(r[0]).trim() : "");
-  const correos = hoja.getRange(2, 11, ultimaFila - 1, 1)
+  const correos = hoja.getRange(2, 12, ultimaFila - 1, 1)
                       .getValues()
                       .map(r => r[0] != null ? String(r[0]).trim().toLowerCase() : "");
 
@@ -78,7 +78,6 @@ function EmisionesCreditoPractica_Todas() {
 
     let fuente = "", med = "", campaña = "";
     let valorZ = "", valorAA = "";
-    let additionalData = ["", "", ""]; 
     let valorW = "";
 
     if (suma > 0) {
@@ -127,7 +126,7 @@ function EmisionesCreditoPractica_Todas() {
     ]);
   });
 
-  hoja.getRange(2, 14, resultados.length, encabezados.length)
+  hoja.getRange(2, 15, resultados.length, encabezados.length)
        .setValues(resultados)
        .setHorizontalAlignment("right");
 }
