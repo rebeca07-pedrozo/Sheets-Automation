@@ -1,6 +1,6 @@
 function EmisionesCreditoPractica_Todas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName("Emisiones 24");
+  const hoja = ss.getSheetByName("Emisiones 31 ago");
   const ultimaFila = hoja.getLastRow();
   if (ultimaFila < 2) return;
 
@@ -79,15 +79,18 @@ function EmisionesCreditoPractica_Todas() {
     let fuente = "", med = "", campaña = "";
     let valorZ = "", valorAA = "";
     let valorW = "";
+    let prod = "";
+    let cruce_cami = "";
+    let prioridad = "";
 
     if (suma > 0) {
       if (countN === 1 || countO === 1) {
-        fuente = "TOTAL LEADS";
         const foundRow = totalLeadsMap.get(cedula) || totalLeadsMap.get(correo);
         if (foundRow) {
           valorW = formatearFecha(foundRow[13]);
-          med = foundRow[9] != null ? String(foundRow[9]) : "";
-          campaña = foundRow[10] != null ? String(foundRow[10]) : "";
+          fuente = foundRow[9] != null ? String(foundRow[9]) : "";
+          med = foundRow[10] != null ? String(foundRow[10]) : "";
+          campaña = foundRow[11] != null ? String(foundRow[11]) : "";
         }
       }
       else if (countP === 1) {
@@ -117,12 +120,15 @@ function EmisionesCreditoPractica_Todas() {
     resultados.push([
       countN, countO, countP, countQ, countR,
       suma,
-      fuente, med, campaña,
+      fuente,
+      med,
+      campaña,
       valorW,
-      "", "", 
+      prod,
+      cruce_cami,
+      prioridad,
       valorZ,
-      valorAA,
-      "" 
+      valorAA
     ]);
   });
 
