@@ -58,8 +58,8 @@ function EmisionesAutosOptimizado() {
     const correo = limpiarCorreo(r[13]); 
 
     const candidates = [
-      { name: 'WA_CC', fila: mapWA_CC.get(doc),   arr: leadsWADatos, fuenteIdx: 4,  medioIdx: 3,  campIdx: 5,  fechaIdx: 2,  defaultFuente: '',       defaultMedio: '' },
-      { name: 'WA_Placa', fila: mapWA_Placa.get(placa), arr: leadsWADatos, fuenteIdx: 4,  medioIdx: 3,  campIdx: 5,  fechaIdx: 2,  defaultFuente: '',       defaultMedio: '' },
+      { name: 'WA_CC', fila: mapWA_CC.get(doc), arr: leadsWADatos, fuenteIdx: 3, medioIdx: 4, campIdx: 5, fechaIdx: 2, defaultFuente: '', defaultMedio: '' },
+      { name: 'WA_Placa', fila: mapWA_Placa.get(placa), arr: leadsWADatos, fuenteIdx: 3, medioIdx: 4, campIdx: 5, fechaIdx: 2, defaultFuente: '', defaultMedio: '' },
       { name: 'TL_CC', fila: mapTL_CC.get(doc),  arr: totalLeadsDatos, fuenteIdx: 12, medioIdx: 16, campIdx: 13, fechaIdx: 15, defaultFuente: '',       defaultMedio: '' },
       { name: 'TL_Placa', fila: mapTL_Placa.get(placa), arr: totalLeadsDatos, fuenteIdx: 12, medioIdx: 16, campIdx: 13, fechaIdx: 15, defaultFuente: '',       defaultMedio: '' },
       { name: 'FB_CC', fila: mapFB_CC.get(doc),  arr: fbAcumuladoDatos, fuenteIdx: null, medioIdx: null, campIdx: 3,  fechaIdx: 2,  defaultFuente: 'Facebook', defaultMedio: 'CPL' },
