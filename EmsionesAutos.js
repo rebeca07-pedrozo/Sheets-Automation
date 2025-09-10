@@ -33,7 +33,7 @@ function EmisionesAutosOptimizado() {
   const mapBASES_CC = new Map(), mapBASES_Correo = new Map();
   basesDatos.forEach(r => { mapBASES_CC.set(limpiarDoc(r[0]), r); mapBASES_Correo.set(limpiarCorreo(r[1]), r); });
 
-  function buscarEnArrayParaCampos(arrayRows, doc, placa, correo, campIdx, fuenteIdx) {
+  function buscarEnArrayParaCampos(arrayRows, doc, placa, correo, campIdx, medioIdx) {
     for (let i = 0; i < arrayRows.length; i++) {
       const row = arrayRows[i];
       let match = false;
@@ -45,8 +45,8 @@ function EmisionesAutosOptimizado() {
       }
       if (match) {
         const camp = (campIdx !== null && row[campIdx]) ? row[campIdx] : null;
-        const fuente = (fuenteIdx !== null && row[fuenteIdx]) ? row[fuenteIdx] : null;
-        if (camp || fuente) return { row: row, camp: camp, fuente: fuente };
+        const medio = (medioIdx !== null && row[medioIdx]) ? row[medioIdx] : null;
+        if (camp || medio) return { row: row, camp: camp, medio: medio };
       }
     }
     return null;
@@ -77,12 +77,11 @@ function EmisionesAutosOptimizado() {
 
     if (primary) {
       const fila = primary.fila;
+      if (primary.fuenteIdx !== null) fuenteFinal = fila[primary.fuenteIdx] || primary.defaultFuente || '';
+      else fuenteFinal = primary.defaultFuente || fuenteFinal || '';
 
-      if (primary.medioIdx !== null) fuenteFinal = fila[primary.medioIdx] || primary.defaultMedio || '';
-      else fuenteFinal = primary.defaultMedio || fuenteFinal || '';
-
-      if (primary.fuenteIdx !== null) medioFinal = fila[primary.fuenteIdx] || primary.defaultFuente || '';
-      else medioFinal = primary.defaultFuente || medioFinal || '';
+      if (primary.medioIdx !== null) medioFinal = fila[primary.medioIdx] || primary.defaultMedio || '';
+      else medioFinal = primary.defaultMedio || medioFinal || '';
 
       if (primary.campIdx !== null) campañaFinal = fila[primary.campIdx] || '';
 
@@ -90,27 +89,27 @@ function EmisionesAutosOptimizado() {
         fechaFinal = (fila[primary.fechaIdx] instanceof Date) ? fila[primary.fechaIdx] : new Date(fila[primary.fechaIdx]);
       }
 
-      if ((!fuenteFinal || !campañaFinal) && primary.arr) {
-        const foundSameSheet = buscarEnArrayParaCampos(primary.arr, doc, placa, correo, primary.campIdx, primary.fuenteIdx);
+      if ((!medioFinal || !campañaFinal) && primary.arr) {
+        const foundSameSheet = buscarEnArrayParaCampos(primary.arr, doc, placa, correo, primary.campIdx, primary.medioIdx);
         if (foundSameSheet) {
           if (!campañaFinal && foundSameSheet.camp) campañaFinal = foundSameSheet.camp;
-          if (!fuenteFinal && foundSameSheet.fuente) fuenteFinal = foundSameSheet.fuente;
+          if (!medioFinal && foundSameSheet.medio) medioFinal = foundSameSheet.medio;
         }
       }
 
-      if (!fuenteFinal || !campañaFinal) {
+      if (!medioFinal || !campañaFinal) {
         for (let c of candidates) {
           if (c === primary) continue;
-          const found = buscarEnArrayParaCampos(c.arr, doc, placa, correo, c.campIdx, c.fuenteIdx);
+          const found = buscarEnArrayParaCampos(c.arr, doc, placa, correo, c.campIdx, c.medioIdx);
           if (found) {
             if (!campañaFinal && found.camp) campañaFinal = found.camp;
-            if (!fuenteFinal && found.fuente) fuenteFinal = found.fuente;
+            if (!medioFinal && found.medio) medioFinal = found.medio;
           }
-          if (fuenteFinal && campañaFinal) break;
+          if (medioFinal && campañaFinal) break;
         }
       }
 
-      if (!fuenteFinal && primary.defaultMedio) fuenteFinal = primary.defaultMedio;
+      if (!medioFinal && primary.defaultMedio) medioFinal = primary.defaultMedio;
     }
 
     const totalConteo = conteos.reduce((s, v) => s + v, 0);
