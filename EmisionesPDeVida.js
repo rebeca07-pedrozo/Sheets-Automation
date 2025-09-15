@@ -1,6 +1,6 @@
-function EmisionesCreditoPractica_Todas() {
+function EmisionesPDeVidaNuevo() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName("EMISIONES 24 AGO");
+  const hoja = ss.getSheetByName("Emisiones 14 sep");
   if (!hoja) {
     SpreadsheetApp.getUi().alert('No se encontró la hoja "EMISIONES 24 AGO".');
     return;
@@ -10,11 +10,10 @@ function EmisionesCreditoPractica_Todas() {
   if (ultimaFila < 2) return;
 
   const encabezados = [
-    "TotalLeads CC", "TotalLeads Email", "Leadforms CC", "Leadforms Email", "322", "Bases CC", "Bases Email",
+    "TotalLeads CC", "TotalLeads Email", "322", "Bases CC", "Bases Email",
     "venta", "fuente", "med", "campaña", "fecha lead",
     "prod", "cruce cami", "Prioridad", "Base", "Cruce Email"
   ];
-
   hoja.getRange(1, 15, 1, encabezados.length)
       .setValues([encabezados])
       .setHorizontalAlignment("right");
@@ -36,20 +35,12 @@ function EmisionesCreditoPractica_Todas() {
   const totalLeadsCedulaMap = new Map();
   const totalLeadsEmailMap = new Map();
   totalLeadsData.forEach(row => {
-    const cedula = row[4] ? String(row[4]).trim() : "";
-    const email = row[0] ? String(row[0]).trim().toLowerCase() : "";
+    const cedula = row[4] ? String(row[4]).trim() : ""; 
+    const email = row[0] ? String(row[0]).trim().toLowerCase() : ""; 
     if (cedula) totalLeadsCedulaMap.set(cedula, row);
     if (email) totalLeadsEmailMap.set(email, row);
   });
-
-  const leadformsData = getSheetData("Leadforms");
-  const leadformsMap = new Map();
-  leadformsData.forEach(row => {
-    const cedula = row[1] ? String(row[1]).trim() : "";
-    const email = row[0] ? String(row[0]).trim().toLowerCase() : "";
-    if (cedula) leadformsMap.set(cedula, row);
-    if (email) leadformsMap.set(email, row);
-  });
+  
   
   const leads322Data = getSheetData("Leads 322");
   const leads322Map = new Map();
@@ -86,51 +77,34 @@ function EmisionesCreditoPractica_Todas() {
     const cedula = cedulaRaw;
     const correo = correos[i];
 
-    const countN = (cedula && totalLeadsCedulaMap.has(cedula)) ? 1 : 0;
-    const countO = (correo && totalLeadsEmailMap.has(correo)) ? 1 : 0;
-    const countX = (cedula && leadformsMap.has(cedula)) ? 1 : 0;
-    const countY = (correo && leadformsMap.has(correo)) ? 1 : 0;
-    const countP = (cedula && leads322Map.has(cedula)) ? 1 : 0;
-    const countQ = (cedula && basesMap.has(cedula)) ? 1 : 0;
-    const countR = (correo && basesMap.has(correo)) ? 1 : 0;
+    const countTotalLeadsCC = (cedula && totalLeadsCedulaMap.has(cedula)) ? 1 : 0;
+    const countTotalLeadsEmail = (correo && totalLeadsEmailMap.has(correo)) ? 1 : 0;
+    const count322 = (cedula && leads322Map.has(cedula)) ? 1 : 0;
+    const countBasesCC = (cedula && basesMap.has(cedula)) ? 1 : 0;
+    const countBasesEmail = (correo && basesMap.has(correo)) ? 1 : 0;
 
-    const suma = countN + countO + countX + countY + countP + countQ + countR;
+    const suma = countTotalLeadsCC + countTotalLeadsEmail + count322 + countBasesCC + countBasesEmail;
 
     let fuente = "", med = "", campaña = "";
     let valorZ = "", valorAA = "";
     let valorW = "";
 
     if (suma > 0) {
-      if (countN === 1 || countO === 1) {
+      if (countTotalLeadsCC === 1 || countTotalLeadsEmail === 1) {
         let foundRow = null;
-        if (countN === 1) {
+        if (countTotalLeadsCC === 1) {
             foundRow = totalLeadsCedulaMap.get(cedula);
-        } else if (countO === 1) {
+        } else if (countTotalLeadsEmail === 1) {
             foundRow = totalLeadsEmailMap.get(correo);
         }
         
         if (foundRow) {
-            if (countN === 1) { 
-                fuente = foundRow[5] ? String(foundRow[5]) : "";
-                med = foundRow[6] ? String(foundRow[6]) : "";
-                campaña = foundRow[7] ? String(foundRow[7]) : "";
-                valorW = formatearFecha(foundRow[8]);
-            } else if (countO === 1) { 
-                fuente = foundRow[5] ? String(foundRow[5]) : "";
-                med = foundRow[6] ? String(foundRow[6]) : "";
-                campaña = foundRow[7] ? String(foundRow[7]) : "";
-                valorW = formatearFecha(foundRow[8]);
-            }
+            fuente = foundRow[5] ? String(foundRow[5]) : ""; 
+            med = foundRow[6] ? String(foundRow[6]) : ""; 
+            campaña = foundRow[7] ? String(foundRow[7]) : ""; 
+            valorW = formatearFecha(foundRow[8]); 
         }
-      } else if (countX === 1 || countY === 1) {
-        fuente = "Facebook";
-        med = "CPL";
-        const foundRow = leadformsMap.get(cedula) || leadformsMap.get(correo);
-        if (foundRow) {
-          campaña = foundRow[3] ? String(foundRow[3]) : "";
-          valorW = formatearFecha(foundRow[2]);
-        }
-      } else if (countP === 1) {
+      } else if (count322 === 1) {
         fuente = "322";
         const foundRow = leads322Map.get(cedula);
         if (foundRow) {
@@ -138,7 +112,7 @@ function EmisionesCreditoPractica_Todas() {
           med = "";
           campaña = foundRow[25] ? String(foundRow[25]) : "";
         }
-      } else if (countQ === 1 || countR === 1) {
+      } else if (countBasesCC === 1 || countBasesEmail === 1) {
         const foundRow = basesMap.get(cedula) || basesMap.get(correo);
         if (foundRow) {
           fuente = foundRow[7] ? String(foundRow[7]) : "BASES";
@@ -154,7 +128,7 @@ function EmisionesCreditoPractica_Todas() {
     }
 
     resultados.push([
-      countN, countO, countX, countY, countP, countQ, countR,
+      countTotalLeadsCC, countTotalLeadsEmail, count322, countBasesCC, countBasesEmail,
       suma,
       fuente, med, campaña,
       valorW,
