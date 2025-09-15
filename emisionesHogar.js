@@ -82,7 +82,7 @@ function EmsionesHogarRefactorizada() {
       fuente = foundRow[9] != null ? String(foundRow[9]) : "";
       med = foundRow[10] != null ? String(foundRow[10]) : "";
       campaña = foundRow[11] != null ? String(foundRow[11]) : "";
-      fechaLead = formatearFechaHora(foundRow[14]); // Columna P
+      fechaLead = formatearFechaHora(foundRow[13]); 
       
     } else if ((cedula && basesMap.has(cedula)) || (correo && basesMap.has(correo))) {
       const foundRow = basesMap.get(cedula) || basesMap.get(correo);
