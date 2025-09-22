@@ -20,10 +20,12 @@ function applyRowBorders(sheet, startRow, numRows, numCols) {
 
 function procesarDatosNuevos() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ui = SpreadsheetApp.getUi();
     var hojaDestino = ss.getSheetByName(NOMBRE_HOJA_DESTINO);
 
     if (!hojaDestino) {
-        Logger.log('ERROR FATAL: La hoja de destino "' + NOMBRE_HOJA_DESTINO + '" no fue encontrada. Por favor, créala o verifica su nombre.');
+        ui.alert('Error Fatal', 'La hoja de destino "' + NOMBRE_HOJA_DESTINO + '" no fue encontrada. Por favor, créala o verifica su nombre.', ui.ButtonSet.OK);
+        Logger.log('ERROR: La hoja de destino no existe.');
         return;
     }
 
@@ -65,13 +67,12 @@ function procesarDatosNuevos() {
             var filasAgregadasEnHoja = 0;
 
             data.forEach(function(row) {
-                if (!row.some(cell => cell)) return; 
-                
+                if (!row[0]) return;
                 var intencion = row[intencionColIndex];
                 if (typeof intencion !== 'string' && typeof intencion !== 'number') return;
                 var intencionNormalizada = String(intencion).trim().toUpperCase();
                 var cumpleCondicion = intencionNormalizada.includes("VENTA") ||
-                                     (intencionNormalizada === "INCENTIVO USO ASISTENCIA BANCASEGUROS");
+                                      (intencionNormalizada === "INCENTIVO USO ASISTENCIA BANCASEGUROS");
 
                 if (cumpleCondicion) {
                     filasParaConsolidar.push(row);
@@ -102,7 +103,7 @@ function procesarDatosNuevos() {
         if (lastRowConsolidado > FILA_ENCABEZADO) {
             hojaDestino.getRange(FILA_ENCABEZADO + 1, 1, lastRowConsolidado - FILA_ENCABEZADO, numCols)
                        .sort({column: 1, ascending: true});
-            Logger.log('Data consolidada ordenada por columna 1 (A -> Z).');
+            Logger.log('Data consolidada ordenada por fecha (A -> Z).');
         }
         
         Logger.log('--- CONSOLIDACIÓN FINALIZADA ---');
@@ -115,7 +116,7 @@ function procesarDatosNuevos() {
 
 function ejecucionInicialCompleta() {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var ui = SpreadsheetApp.getUi(); 
+    var ui = SpreadsheetApp.getUi();
     var hojaDestino = ss.getSheetByName(NOMBRE_HOJA_DESTINO);
     var scriptProperties = PropertiesService.getScriptProperties();
 
@@ -130,16 +131,14 @@ function ejecucionInicialCompleta() {
         Logger.log('Consolidado limpiado. Borradas ' + filasABorrar + ' filas históricas.');
     }
 
-    if (hojaDestino.getLastRow() < FILA_ENCABEZADO + 1) { 
-        var primeraHoja = ss.getSheetByName(HOJAS_ORIGEN[0]);
-        if (primeraHoja) {
-            var encabezadosRange = primeraHoja.getRange(FILA_ENCABEZADO, 1, 1, primeraHoja.getLastColumn());
-            encabezadosRange.copyTo(hojaDestino.getRange(FILA_ENCABEZADO, 1));
-            
-            hojaDestino.getRange(FILA_ENCABEZADO, 1, 1, primeraHoja.getLastColumn()).setBorder(null, null, true, null, false, false, 'black', SpreadsheetApp.BorderStyle.SOLID);
-            
-            Logger.log('Encabezados copiados de ' + HOJAS_ORIGEN[0] + ' al Consolidado.');
-        }
+    var primeraHoja = ss.getSheetByName(HOJAS_ORIGEN[0]);
+    if (primeraHoja && hojaDestino.getLastRow() === 0) {
+        var encabezadosRange = primeraHoja.getRange(FILA_ENCABEZADO, 1, 1, primeraHoja.getLastColumn());
+        encabezadosRange.copyTo(hojaDestino.getRange(FILA_ENCABEZADO, 1));
+        
+        hojaDestino.getRange(FILA_ENCABEZADO, 1, 1, primeraHoja.getLastColumn()).setBorder(null, null, true, null, false, false);
+        
+        Logger.log('Encabezados copiados de ' + HOJAS_ORIGEN[0] + ' al Consolidado.');
     }
 
     scriptProperties.deleteAllProperties();
@@ -149,7 +148,6 @@ function ejecucionInicialCompleta() {
 
     ui.alert('Éxito', '¡La ejecución inicial de data histórica ha finalizado y los marcadores de última fila se han guardado!', ui.ButtonSet.OK);
 }
-
 
 
 function configurarDisparadorAutomatico() {
