@@ -1,8 +1,7 @@
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('🚗 Emisiones')
-    .addItem('Ejecutar Emisiones Autos (con hoja)', 'menuEjecutarAutos')
-    .addItem('Ejecutar Cruce Leads (automático)', 'menuEjecutarLeads')
+  ui.createMenu('Emisiones 🚗')
+    .addItem('Ejecutar Emisiones Autos', 'menuEjecutarAutos')
     .addToUi();
 }
 
@@ -23,12 +22,3 @@ function menuEjecutarAutos() {
   }
 }
 
-function menuEjecutarLeads() {
-  const ui = SpreadsheetApp.getUi();
-  try {
-    cruzarLeads();
-    ui.alert('Proceso de Adname listo.');
-  } catch (e) {
-    ui.alert('Error al ejecutar Proceso de Adname listo: ' + e.message);
-  }
-}
