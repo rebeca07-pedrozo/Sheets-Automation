@@ -12,7 +12,6 @@ function menuEjecutarIntegral() {
   if (response.getSelectedButton() == ui.Button.OK && response.getResponseText().trim()) {
     const nombreHoja = response.getResponseText().trim();
     try {
-      // CAMBIA 'EmisionesIntegral' por 'CruceDatosSaludIntegral'
       CruceDatosSaludIntegral(nombreHoja); 
       ui.alert('Proceso completado para ' + nombreHoja);
     } catch (e) {
