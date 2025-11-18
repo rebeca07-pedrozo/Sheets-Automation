@@ -13,7 +13,7 @@ function EmisionesAutosCruzados(nombreHoja) {
 
   const limpiarDoc = d => String(d || '').replace(/\./g, '').replace(/\s/g, '').toLowerCase();
   const limpiarPlaca = p => String(p || '').replace(/\s/g, '').toLowerCase();
-  const limpiarCorreo = c => String(c || '').trim().toLowerCase();
+  const limpiarCorreo = c => String(c || '').trim().toLowerCase();  
 
   const datosEmisiones = hoja.getRange(2, 2, ultimaFila - 1, 14).getValues();
 
