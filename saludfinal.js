@@ -233,12 +233,6 @@ function CruceDatosSaludIntegral(nombreHoja) {
     hojaPrincipal.getRange(2, COLUMNA_INICIO_RESULTADOS, resultadosFinales.length, resultadosFinales[0].length).setValues(resultadosFinales);
   }
 }
-
-
-
-
-
-
 //Aca empieza medida
 /***Poliza : E
  * Correo: K
@@ -259,11 +253,11 @@ function SaludAsuMedida(nombreHoja) {
     Logger.log("No hay datos para procesar en la hoja principal.");
     return;
   }
-  
-  const rangoDatos = hojaPrincipal.getRange(2, 5, ultimaFila - 1, 10).getValues(); 
 
+  const numColumnas = 10;
+  const rangoDatos = hojaPrincipal.getRange(2, 5, ultimaFila - 1, numColumnas).getValues(); 
 
-  const limpiarCC = d => String(d || '').replace(/\./g, '').replace(/\s/g, '').trim();
+  const limpiarCC = d => String(d || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
   const limpiarCorreo = c => String(c || '').replace(/\s/g, '').trim().toLowerCase(); 
   const limpiarPoliza = p => String(p || '').trim();
 
@@ -290,7 +284,7 @@ function SaludAsuMedida(nombreHoja) {
       return { map: new Map(), data: [] };
     }
 
-    const data = hoja.getRange(2, 1, hoja.getLastRow() - 1, hoja.getLastColumn()).getValues();
+    const data = hoja.getDataRange().getValues().slice(1);
     
     if (fechaColumna !== null && nombreHoja !== "Revision duplicados") {
       data.sort((a, b) => {
@@ -323,7 +317,7 @@ function SaludAsuMedida(nombreHoja) {
 
   const { map: duplicadosMap } = cargarDatosYMapa("Revision duplicados", [12], null);
   const esPolizaDuplicada = (poliza) => poliza && duplicadosMap.has(limpiarPoliza(poliza));
-//DE DONDE LO SACA!!
+
   const config = {
     leadsSalud: { name: "TOTAL LEADS SALUD LIGERO", ids: [6, 4], fecha: 12, infoCols: { fuente: 9, medio: 10, campaña: 11 } }, 
     leads322: { name: "Leads 322 - salud ", ids: [11], fecha: 27, infoCols: { medio: 8, campaña: 24 }, fuente: "322" }, 
@@ -337,8 +331,8 @@ function SaludAsuMedida(nombreHoja) {
   const { map: basesMap } = cargarDatosYMapa(config.bases.name, config.bases.ids, config.bases.fecha);
 
   const encabezados = [
-    "cc", "cc2", "correo", "S", "T",
-    "322", "Referidos", "Bases", "Base mail", 
+    "cc - LIGERO", "cc2 - LIGERO", "correo - LIGERO", "S", "T",
+    "322", "Referidos", "Base CC", "Base mail", 
     "ventas", "test", "fuente", "medio", "campaña", "fecha lead"
   ];
   const colInicioEscritura = 16; 
@@ -347,11 +341,10 @@ function SaludAsuMedida(nombreHoja) {
   const resultados = [];
 
   rangoDatos.forEach(fila => {
-    const poliza = limpiarPoliza(fila[0]); 
-    
-    const correo = limpiarCorreo(fila[5]); 
-    const cc1 = limpiarCC(fila[6]);     
-    const cc2 = limpiarCC(fila[7]);     
+    const poliza = limpiarPoliza(fila[0]); // E
+    const correo = limpiarCorreo(fila[6]); // K
+    const cc1 = limpiarCC(fila[7]);       // L
+    const cc2 = limpiarCC(fila[9]);       // N
 
     let testValue = "-";
     let skipLeadsSearch = false;
@@ -366,84 +359,85 @@ function SaludAsuMedida(nombreHoja) {
       return; 
     }
 
-
     const matchSaludCC1   = (cc1 && leadsSaludMap.has(cc1)) ? 1 : 0;
     const matchSaludCC2   = (cc2 && leadsSaludMap.has(cc2)) ? 1 : 0;
     const matchSaludCorreo = (correo && leadsSaludMap.has(correo)) ? 1 : 0;
     
-    const match322CC     = (cc1 && leads322Map.has(cc1)) ? 1 : 0; 
-    const matchReferidos = (cc1 && referidosMap.has(cc1)) ? 1 : 0;
-    const matchBaseCC     = (cc1 && basesMap.has(cc1)) ? 1 : 0;
+    const match322CC     = ((cc1 && leads322Map.has(cc1)) || (cc2 && leads322Map.has(cc2))) ? 1 : 0; 
+    
+    const matchReferidos = ((cc1 && referidosMap.has(cc1)) || (cc2 && referidosMap.has(cc2)) || (correo && referidosMap.has(correo))) ? 1 : 0;
+
+    const matchBaseCC     = ((cc1 && basesMap.has(cc1)) || (cc2 && basesMap.has(cc2))) ? 1 : 0;
     const matchBaseMail   = (correo && basesMap.has(correo)) ? 1 : 0;
 
     const ventas = matchSaludCC1 + matchSaludCC2 + matchSaludCorreo +
-                   match322CC + matchReferidos + matchBaseCC + matchBaseMail;
+                     match322CC + matchReferidos + matchBaseCC + matchBaseMail;
 
     let fuente = "", medio = "", campana = "", fechaLead = null;
     let registro = null;
 
 
     if (matchSaludCC1 || matchSaludCC2 || matchSaludCorreo) {
-      if (matchSaludCC1) {
-          registro = leadsSaludMap.get(cc1);
-      } else if (matchSaludCC2) {
-          registro = leadsSaludMap.get(cc2);
-      } else if (matchSaludCorreo) {
-          registro = leadsSaludMap.get(correo);
-      }
-      
-      if (registro) {
-        fuente = registro[config.leadsSalud.infoCols.fuente];
-        medio = registro[config.leadsSalud.infoCols.medio];
-        campana = registro[config.leadsSalud.infoCols.campaña];
-        fechaLead = registro[config.leadsSalud.fecha];
-      }
+        if (matchSaludCC1) {
+            registro = leadsSaludMap.get(cc1);
+        } else if (matchSaludCC2) {
+            registro = leadsSaludMap.get(cc2);
+        } else if (matchSaludCorreo) {
+            registro = leadsSaludMap.get(correo);
+        }
+        
+        if (registro) {
+            fuente = registro[config.leadsSalud.infoCols.fuente] || '';
+            medio = registro[config.leadsSalud.infoCols.medio] || '';
+            campana = registro[config.leadsSalud.infoCols.campaña] || '';
+            fechaLead = registro[config.leadsSalud.fecha];
+        }
     } 
     else if (match322CC) {
-      registro = leads322Map.get(cc1);
-      if (registro) {
-        fuente = config.leads322.fuente; 
-        medio = registro[config.leads322.infoCols.medio];
-        campana = registro[config.leads322.infoCols.campaña];
-        fechaLead = registro[config.leads322.fecha];
-      }
+        registro = leads322Map.get(cc1) || leads322Map.get(cc2);
+        if (registro) {
+            fuente = config.leads322.fuente; 
+            medio = registro[config.leads322.infoCols.medio] || '';
+            campana = registro[config.leads322.infoCols.campaña] || '';
+            fechaLead = registro[config.leads322.fecha];
+        }
     } 
     else if (matchReferidos) {
-      registro = referidosMap.get(cc1);
-      if (registro) {
-        fuente = config.referidos.fuente; 
-        medio = registro[config.referidos.infoCols.medio];
-        campana = ""; 
-        fechaLead = registro[config.referidos.fecha];
-      }
+        registro = referidosMap.get(cc1) || referidosMap.get(cc2) || referidosMap.get(correo);
+        if (registro) {
+            fuente = config.referidos.fuente; 
+            medio = registro[config.referidos.infoCols.medio] || '';
+            campana = ""; 
+            fechaLead = registro[config.referidos.fecha];
+        }
     } 
     else if (matchBaseCC || matchBaseMail) {
-      registro = basesMap.get(cc1) || basesMap.get(correo);
-      if (registro) {
-        fuente = registro[config.bases.infoCols.fuente];
-        medio = registro[config.bases.infoCols.medio];
-        campana = registro[config.bases.infoCols.campaña];
-        fechaLead = registro[config.bases.fecha];
-      }
+        registro = basesMap.get(cc1) || basesMap.get(correo) || basesMap.get(cc2);
+        if (registro) {
+            fuente = registro[config.bases.infoCols.fuente] || '';
+            medio = registro[config.bases.infoCols.medio] || '';
+            campana = registro[config.bases.infoCols.campaña] || '';
+            fechaLead = registro[config.bases.fecha];
+        }
     }
     
     const fechaFormateada = formatearFecha(fechaLead);
 
     resultados.push([
-      matchSaludCC1,     
-      matchSaludCC2,      
-      matchSaludCorreo,   
-      "", "",             
-      match322CC,         
-      matchReferidos,     
-      matchBaseCC,        
-      matchBaseMail,      
-      ventas,             
-      testValue,          
-      fuente,             
-      medio,              
-      campana,           
-      fechaFormateada    
+        matchSaludCC1,     
+        matchSaludCC2,      
+        matchSaludCorreo,   
+        "", "",             
+        match322CC,         
+        matchReferidos,     
+        matchBaseCC,        
+        matchBaseMail,      
+        ventas,             
+        testValue,          
+        fuente,             
+        medio,              
+        campana,           
+        fechaFormateada    
     ]);
   });
 
@@ -451,11 +445,3 @@ function SaludAsuMedida(nombreHoja) {
     hojaPrincipal.getRange(2, colInicioEscritura, resultados.length, resultados[0].length).setValues(resultados);
   }
 }
-
-
-
-
-
-
-
-
