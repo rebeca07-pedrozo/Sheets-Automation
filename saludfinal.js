@@ -233,6 +233,7 @@ function CruceDatosSaludIntegral(nombreHoja) {
     hojaPrincipal.getRange(2, COLUMNA_INICIO_RESULTADOS, resultadosFinales.length, resultadosFinales[0].length).setValues(resultadosFinales);
   }
 }
+
 //Aca empieza medida
 /***Poliza : E
  * Correo: K
