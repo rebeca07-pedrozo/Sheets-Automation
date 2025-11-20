@@ -1,144 +1,122 @@
-//KEY_PRIMAS = 'Archivo_de_primas_'
-//KEY_PERSONAS = 'Archivo_de_personas_'
-const KEY_VALORES = 'Archivo_de_primas_'; // CLAVE CORREGIDA
-const KEY_PERSONAS = 'Archivo_de_personas_'; // CLAVE CORREGIDA
+const KEY_PRIMAS = 'Archivo_de_primas_';
+const KEY_PERSONAS = 'Archivo_de_personas_';
 
-const binaryData = $input.item.binary;
+const primasBinary = items[0].binary[KEY_PRIMAS];
+const personasBinary = items[0].binary[KEY_PERSONAS];
 
-if (!binaryData || !binaryData[KEY_VALORES] || !binaryData[KEY_PERSONAS]) {
-    throw new Error("No se encontraron los archivos binarios subidos.");
-}
-const valoresCSV = Buffer.from(binaryData[KEY_VALORES].data, 'base64').toString('utf8');
-const personasCSV = Buffer.from(binaryData[KEY_PERSONAS].data, 'base64').toString('utf8');
+const primasCSV = Buffer.from(primasBinary.data, 'base64').toString('utf8');
+const personasCSV = Buffer.from(personasBinary.data, 'base64').toString('utf8');
 
-function csvToJson(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) return [];
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data = [];
+// =========================
+// PARSER CSV A JSON PURO JS
+// =========================
+function csvToJson(csv) {
+  const lines = csv.split(/\r?\n/);
+  const headers = lines.shift().split(",").map(h => h.trim());
 
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
-        if (values.length !== headers.length) continue; 
-        
-        const obj = {};
-        for (let j = 0; j < headers.length; j++) {
-            obj[headers[j]] = values[j] ? values[j].trim().replace(/"/g, '') : '';
-        }
-        data.push(obj);
-    }
-    return data;
+  return lines
+    .filter(l => l.trim().length > 0)
+    .map(line => {
+      const cols = line.split(",").map(c => c.trim());
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = cols[i] || "");
+      return obj;
+    });
 }
 
-const valores = csvToJson(valoresCSV);
+const primas = csvToJson(primasCSV);
 const personas = csvToJson(personasCSV);
 
-const valoresMap = new Map();
-valores.forEach(v => {
-    if (v.numero_poliza) {
-        valoresMap.set(String(v.numero_poliza), v.PRIMA);
-    }
-});
+// ====================================
+// AGRUPAR PERSONAS POR numero_poliza
+// ====================================
+const grupos = {};
 
-const grouped = new Map();
+for (const row of personas) {
+  const poliza = row.numero_poliza;
 
-personas.forEach(p => {
-    const poliza = String(p.numero_poliza);
+  if (!grupos[poliza]) {
+    grupos[poliza] = {
+      numero_poliza: poliza,
+      clave_agente: row.clave_agente,
+      codigo_producto: row.codigo_producto,
+      fecha_emision: row.fecha_emision,
+      nombre_producto: row.nombre_producto,
+      nombre_opcion_poliza: row.nombre_opcion_poliza,
+      tipo_documento: row.tipo_documento,
+      FECHA_PROCESO: row.FECHA_PROCESO,
+      NUMERO_DOCUMENTO: new Set(),
+      NOMBRE: new Set(),
+      CORREO_1: new Set(),
+      CELULAR_1: new Set()
+    };
+  }
 
-    if (!grouped.has(poliza)) {
-        grouped.set(poliza, {
-            numero_poliza: poliza,
-            clave_agente: p.clave_agente,
-            codigo_producto: p.codigo_producto,
-            fecha_emision: p.fecha_emision,
-            nombre_producto: p.nombre_producto,
-            nombre_opcion_poliza: p.nombre_opcion_poliza,
-            tipo_documento: p.tipo_documento,
-            NUMERO_DOCUMENTO: new Set(),
-            NOMBRE: new Set(),
-            CORREO_1: new Set(),
-            CELULAR_1: new Set(),
-            FECHA_PROCESO: p.FECHA_PROCESO
-        });
-    }
-
-    const item = grouped.get(poliza);
-    if (p.NUMERO_DOCUMENTO) item.NUMERO_DOCUMENTO.add(String(p.NUMERO_DOCUMENTO));
-    if (p.NOMBRE) item.NOMBRE.add(String(p.NOMBRE));
-    if (p.CORREO_1) item.CORREO_1.add(String(p.CORREO_1));
-    if (p.CELULAR_1) item.CELULAR_1.add(String(p.CELULAR_1));
-});
-
-
-function expandirColumnaJS(dfItem, columnaBaseSet, prefijo) {
-    const lista = Array.from(columnaBaseSet).filter(s => s.trim() !== '').sort();
-    
-    for (let i = 0; i < lista.length; i++) {
-        dfItem[`${prefijo}_${i + 1}`] = lista[i];
-    }
-    return dfItem;
+  if (row.NUMERO_DOCUMENTO) grupos[poliza].NUMERO_DOCUMENTO.add(String(row.NUMERO_DOCUMENTO));
+  if (row.NOMBRE) grupos[poliza].NOMBRE.add(String(row.NOMBRE));
+  if (row.CORREO_1) grupos[poliza].CORREO_1.add(String(row.CORREO_1));
+  if (row.CELULAR_1) grupos[poliza].CELULAR_1.add(String(row.CELULAR_1));
 }
 
-let resultadoFinal = Array.from(grouped.values()).map(agrupado => {
-    
-    const prima = valoresMap.get(agrupado.numero_poliza) || '';
+const agrupado = Object.values(grupos).map(r => ({
+  ...r,
+  NUMERO_DOCUMENTO: [...r.NUMERO_DOCUMENTO].sort().join(", "),
+  NOMBRE: [...r.NOMBRE].sort().join(", "),
+  CORREO_1: [...r.CORREO_1].sort().join(", "),
+  CELULAR_1: [...r.CELULAR_1].sort().join(", "),
+}));
 
-    let nuevoItem = {
-        numero_poliza: agrupado.numero_poliza,
-        clave_agente: agrupado.clave_agente,
-        codigo_producto: agrupado.codigo_producto,
-        fecha_emision: agrupado.fecha_emision,
-        nombre_producto: agrupado.nombre_producto,
-        nombre_opcion_poliza: agrupado.nombre_opcion_poliza,
-        tipo_documento: agrupado.tipo_documento,
-        
-        Prima_totalizada: prima,
-        FECG: agrupado.FECHA_PROCESO,
-        
-        CORREO_1_temp: Array.from(agrupado.CORREO_1).filter(Boolean).sort().join(', '),
+// =========================
+// MERGE CON PRIMAS
+// =========================
+const mapPrimas = Object.fromEntries(primas.map(p => [p.numero_poliza, p.PRIMA]));
 
-        DOC_SET: agrupado.NUMERO_DOCUMENTO,
-        CORREO_SET: agrupado.CORREO_1
-    };
-    
-    nuevoItem = expandirColumnaJS(nuevoItem, nuevoItem.DOC_SET, 'Numero_documento');
-    nuevoItem = expandirColumnaJS(nuevoItem, nuevoItem.CORREO_SET, 'CORREO');
-    
-    return nuevoItem;
-});
+for (const row of agrupado) {
+  row.Prima_totalizada = mapPrimas[row.numero_poliza] || "";
+  row.FECG = row.FECHA_PROCESO;
+}
 
+// ====================================
+// EXPANDIR COLUMNAS
+// ====================================
+function expandir(colBase, prefijo) {
+  for (const row of agrupado) {
+    const lista = row[colBase] ? row[colBase].split(",").map(i => i.trim()).filter(Boolean) : [];
+    lista.forEach((val, i) => {
+      row[`${prefijo}_${i + 1}`] = val;
+    });
+  }
+}
+
+expandir("NUMERO_DOCUMENTO", "Numero_documento");
+expandir("CORREO_1", "CORREO");
+
+// =========================
+// COLUMNAS FINALES
+// =========================
 const columnas_finales = [
-    'emisiones',
-    'revision agente',
-    'codigo_producto',
-    'clave_agente',
-    'numero_poliza',
-    'fecha_emision',
-    'nombre_producto',
-    'nombre_opcion_poliza',
-    'CORREO_1', 
-    'Numero_documento_1',
-    'Numero_documento_2',
-    'Prima_totalizada',
-    'tipo_documento',
-    'FECG'
+  "emisiones",
+  "revision agente",
+  "codigo_producto",
+  "clave_agente",
+  "numero_poliza",
+  "fecha_emision",
+  "nombre_producto",
+  "nombre_opcion_poliza",
+  "CORREO_1",
+  "Numero_documento_1",
+  "Numero_documento_2",
+  "Prima_totalizada",
+  "tipo_documento",
+  "FECG"
 ];
 
-resultadoFinal = resultadoFinal.map(item => {
-    const finalItem = {};
-    
-    columnas_finales.forEach(col => {
-        if (col === 'CORREO_1') {
-            finalItem[col] = item.CORREO_1_temp || '';
-        } else if (item.hasOwnProperty(col)) {
-            finalItem[col] = item[col];
-        } else {
-            finalItem[col] = '';
-        }
-    });
-
-    return finalItem;
+const resultado_final = agrupado.map(row => {
+  const out = {};
+  for (const col of columnas_finales) {
+    out[col] = row[col] || "";
+  }
+  return out;
 });
 
-return resultadoFinal.map(item => ({json: item}));
+return resultado_final.map(r => ({ json: r }));
