@@ -1,40 +1,63 @@
 import pandas as pd
-import numpy as np
 
-emisiones = pd.read_csv('/content/Ventas3Agosto.csv')
-emisiones['prima'] = pd.to_numeric(emisiones['prima'], errors='coerce')
+valores = pd.read_csv('/content/bquxjob_73cf28b2_19a987b8f5a.csv')
+personas = pd.read_csv('/content/ventas 17 nov - EMISIONES SALUD.csv')
 
-agrupado = emisiones.groupby('numero_poliza').agg({
+print(personas.columns.tolist())
+
+agrupado = personas.groupby('numero_poliza').agg({
     'clave_agente': 'first',
     'codigo_producto': 'first',
     'fecha_emision': 'first',
     'nombre_producto': 'first',
     'nombre_opcion_poliza': 'first',
-    'prima': 'sum',
     'tipo_documento': 'first',
-    'FECHA_PROCESO': 'first',
-    'NUMERO_DOCUMENTO': lambda x: list(pd.unique(x)),
-    'NOMBRE': lambda x: list(pd.unique(x)),
-    'CORREO_1': lambda x: list(pd.unique(x)),
-    'CELULAR_1': lambda x: list(pd.unique(x)),
+    'NUMERO_DOCUMENTO': lambda x: ', '.join(sorted(set(x.dropna().astype(str)))),
+    'NOMBRE': lambda x: ', '.join(sorted(set(x.dropna().astype(str)))),
+    'CORREO_1': lambda x: ', '.join(sorted(set(x.dropna().astype(str)))),
+    'CELULAR_1': lambda x: ', '.join(sorted(set(x.dropna().astype(str)))),
+    'FECHA_PROCESO': 'first'
 }).reset_index()
 
-def expandir_columnas(df, columna_base, prefijo):
-    max_items = df[columna_base].apply(len).max()
-    nuevas_cols = pd.DataFrame(
-        df[columna_base].tolist(),
-        columns=[f"{prefijo}_{i+1}" for i in range(max_items)]
-    )
+resultado = pd.merge(agrupado, valores[['numero_poliza', 'PRIMA']], on='numero_poliza', how='left')
+
+resultado = resultado.rename(columns={
+    'PRIMA': 'Prima_totalizada',
+    'FECHA_PROCESO': 'FECG'
+})
+
+def expandir_columna(df, columna_base, prefijo):
+    df[columna_base] = df[columna_base].fillna('')
+    listas = df[columna_base].apply(lambda x: [i.strip() for i in x.split(',') if i.strip()])
+    max_items = listas.apply(len).max()
+    nuevas_cols = pd.DataFrame(listas.tolist(), columns=[f"{prefijo}_{i+1}" for i in range(max_items)])
     return pd.concat([df.drop(columns=[columna_base]), nuevas_cols], axis=1)
 
-agrupado = expandir_columnas(agrupado, 'NUMERO_DOCUMENTO', 'NUMERO_DOCUMENTO')
-agrupado = expandir_columnas(agrupado, 'NOMBRE', 'NOMBRE')
-agrupado = expandir_columnas(agrupado, 'CORREO_1', 'CORREO')
-agrupado = expandir_columnas(agrupado, 'CELULAR_1', 'CELULAR')
+resultado = expandir_columna(resultado, 'NUMERO_DOCUMENTO', 'Numero_documento')
+resultado = expandir_columna(resultado, 'CORREO_1', 'CORREO')
 
-agrupado['prima'] = agrupado['prima'].fillna(0).astype('int64')
-for col in agrupado.columns:
-    if agrupado[col].dtype == 'float64':
-        agrupado[col] = agrupado[col].fillna(0).astype('int64')
+columnas_finales = [
+    'emisiones',
+    'revision agente',
+    'codigo_producto',
+    'clave_agente',
+    'numero_poliza',
+    'fecha_emision',
+    'nombre_producto',
+    'nombre_opcion_poliza',
+    'CORREO_1',
+    'Numero_documento_1',
+    'Numero_documento_2',
+    'Prima_totalizada',
+    'tipo_documento',
+    'FECG'
+]
 
-agrupado.to_csv("emisionesAgrupadas.csv", index=False)
+for col in columnas_finales:
+    if col not in resultado.columns:
+        resultado[col] = ''
+
+resultado_final = resultado[columnas_finales]
+resultado_final.to_csv('Salud cruzado.csv', index=False, encoding='utf-8-sig')
+print("Archivo generado: Consolidado Primas.csv")
+
