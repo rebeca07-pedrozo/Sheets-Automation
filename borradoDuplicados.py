@@ -45,11 +45,11 @@ columnas_finales = [
     'fecha_emision',
     'nombre_producto',
     'nombre_opcion_poliza',
+    'Prima_totalizada',
     'CORREO_1',
     'Numero_documento_1',
-    'Numero_documento_2',
-    'Prima_totalizada',
     'tipo_documento',
+    'Numero_documento_2',    
     'FECG'
 ]
 
