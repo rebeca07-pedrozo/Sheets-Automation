@@ -60,3 +60,5 @@ resultado_final = resultado[columnas_finales]
 resultado_final.to_csv('Salud cruzado.csv', index=False, encoding='utf-8-sig')
 print("Archivo generado: Consolidado Primas.csv")
 
+
+
