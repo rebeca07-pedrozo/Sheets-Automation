@@ -34,7 +34,6 @@ def expandir_columna(df, columna_base, prefijo):
     return pd.concat([df.drop(columns=[columna_base]), nuevas_cols], axis=1)
 
 resultado = expandir_columna(resultado, 'NUMERO_DOCUMENTO', 'Numero_documento')
-resultado = expandir_columna(resultado, 'CORREO_1', 'CORREO')
 
 columnas_finales = [
     'emisiones',
